@@ -1,23 +1,13 @@
 <html>
 
-<head>
-  <title>Thermal Measurements</title>
-  <link rel="StyleSheet" type="text/css" href="../souvik.css" />
-</head>
-
 <body>
 
 <center>
-<h1> Thermal Conductivity Measurements of Carbon Fiber Composites and Thermal Interface Materials </h1>
+<h1> Analyses Code for Thermal Conductivity Measurements of Carbon Fiber Composites and Thermal Interface Materials </h1>
 <h2> Experiments conducted at Purdue University for the CMS Phase II Inner Tracker </h2>
-
-<p>Ryan Story, Jack Wheeler, Abraham Matthew Koshy, Sushrut Karmarkar, Andreas Jung, <a href="mailto:souvik@purdue.edu">Souvik Das</a> <br/>
-Purdue University, West Lafayette, IN
-</p>
-
 </center>
 
-<p> Purdue University hosts two home-made instruments for thermal conductivity measurements in steady-state conditions. One measures thermal conductivity through the plane of the material and the other measures conductivity in the plane of the material. This was done to disentangle k<sub>xx</sub>, k<sub>yy</sub> and k<sub>zz</sub> for anisotropic materials like carbon fiber. We do not have a way to measure off-diagonal terms in the thermal conductivity tensor, like k<sub>xy</sub>, and for isotropic materials and orthogonal layups of unidirectional carbon fiber, we assume them to be zero.</p>
+<p> Purdue University hosts two home-made instruments for thermal conductivity measurements in steady-state conditions. One measures thermal conductivity through the plane of the material and the other measures conductivity in the plane of the material. This was done to disentangle k<sub>xx</sub>, k<sub>yy</sub> and k<sub>zz</sub> for anisotropic materials like carbon fiber. This repository contains C++ programs that compile into standalone executables for quick data analysis. The CERN ROOT library is used for making plots and fits.</p>
 
 <table border="0">
  <tr>
