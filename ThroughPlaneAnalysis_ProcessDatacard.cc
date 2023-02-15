@@ -82,7 +82,6 @@ int main()
       for (unsigned int i = 1; i < v_data.size(); ++i)
         v_coolerRegionDiffErr.push_back(stod(v_data.at(i)));
 
-
     if (v_data.at(0) == "</pre>") b_readData = false;
   }
   ifs_datacard.close();
@@ -102,7 +101,7 @@ int main()
   while (getline(ifs_apparatus, line, '\n'))
   {
     vector<string> v_data;
-    splitLine(line, v_data, ':');
+    splitLine(line, v_data, ',');
     if (v_data.at(0) == "Apparatus Name")                 apparatus_name = v_data.at(1);
     if (v_data.at(0) == "Inter-thermistor distance (mm)") apparatus_thermistorDistance = stod(v_data.at(1));
     if (v_data.at(0) == "Thermistor bore diameter (mm)")  apparatus_thermistorBoreDiameter = stod(v_data.at(1));
@@ -177,9 +176,7 @@ int main()
   }
   double x_sampleHotEnd = n_heaterThermistors * apparatus_thermistorDistance; // wrt hottest thermistor of hot fluxmeter
   double x_sampleColdEnd = -apparatus_thermistorDistance;                     // wrt hottest thermistor of cold fluxmeter
-  cout<<"x_sampleHotEnd = "<<x_sampleHotEnd<<endl;
-  cout<<"x_sampleColdEnd = "<<x_sampleColdEnd<<endl;
-
+  
   // Fit the basic Heater Region plot
   TGraphErrors *g_HeaterFlux = new TGraphErrors(n_heaterThermistors, &v_heaterPosition[0], &v_heaterRegionAvg[0], &v_heaterPositionErr[0], &v_heaterRegionErr[0]);
   g_HeaterFlux->SetTitle("; Thermistor Position (mm); Average Thermistor Temperature (^{#circ}C)");

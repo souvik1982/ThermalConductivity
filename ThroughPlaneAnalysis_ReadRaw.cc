@@ -51,7 +51,6 @@ int main(int argc, char **argv)
          meta_thicknessErr,
          meta_heaterVoltage,
          meta_coolerVoltage;
-  vector<string> v_heaterChannel, v_coolerChannel;
   string line;
   bool b_readMeta = true;
   while (b_readMeta)
@@ -65,24 +64,10 @@ int main(int argc, char **argv)
     else if (key == "Material")        meta_material = v_metaData.at(1);
     else if (key == "Sample")          meta_sample = v_metaData.at(1);
     else if (key == "Thickness (um)")  {meta_thickness = v_metaData.at(1); meta_thicknessErr = v_metaData.at(2);}
-    else if (key == "Heater Voltage")  meta_heaterVoltage = v_metaData.at(1);
-    else if (key == "Cooler Voltage")  meta_coolerVoltage = v_metaData.at(1);
-    else if (key == "Heater Channels")
-      for (unsigned int i = 1; i < v_metaData.size(); ++i)
-      {
-        string content = v_metaData.at(i);
-        if (content.size() == 3) v_heaterChannel.push_back(v_metaData.at(i));
-      }
-    else if (key == "Cooler Channels")
-      for (unsigned int i = 1; i < v_metaData.size(); ++i)
-      {
-        string content = v_metaData.at(i);
-        if (content.size() == 3) v_coolerChannel.push_back(v_metaData.at(i));
-      }
+    else if (key == "Heater Voltage (V)")  meta_heaterVoltage = v_metaData.at(1);
+    else if (key == "Cooler Voltage (V)")  meta_coolerVoltage = v_metaData.at(1);
     else if (key == "Item")            b_readMeta = false;
   }
-  const unsigned int n_heaterThermistors = v_heaterChannel.size();
-  const unsigned int n_coolerThermistors = v_coolerChannel.size();
   cout<<"==========================================="<<endl;
   cout<<"Thermal Conductivity Through-Plane Analysis"<<endl;
   cout<<"Data ingestion program"<<endl;
@@ -92,19 +77,54 @@ int main(int argc, char **argv)
   cout<<"Date: "<<meta_date<<endl;
   cout<<"Material: "<<meta_material<<endl;
   cout<<"Sample: "<<meta_sample<<endl;
-  cout<<"Heater voltage: "<<meta_heaterVoltage<<" V"<<endl;
-  cout<<"Cooler voltage: "<<meta_coolerVoltage<<" V"<<endl;
-  cout<<" Heater channels: ";
+  cout<<"Heater Voltage: "<<meta_heaterVoltage<<" V"<<endl;
+  cout<<"Cooler Voltage: "<<meta_coolerVoltage<<" V"<<endl;
+  // End reading metadata
+
+  // Read machine information from Apparatus.html
+  ifstream ifs_apparatus("Apparatus.html");
+  if (!ifs_apparatus.good())
+  {
+    cout<<"ERROR: Apparatus.html containing apparatus-specific information not found. Please softlink to it from the current directory. Aborting."<<endl;
+    return 0;
+  }
+  vector<string> v_heaterChannel, v_coolerChannel;
+  string line_apparatus;
+  while (getline(ifs_apparatus, line_apparatus, '\n'))
+  {
+    vector<string> v_data;
+    splitLine(line_apparatus, v_data, ',');
+    if (v_data.at(0) == "Heater Channels")
+    {
+      for (unsigned int i = 1; i < v_data.size(); ++i)
+      {
+        string content = v_data.at(i);
+        if (content.size() == 3) v_heaterChannel.push_back(v_data.at(i));
+      }
+    }
+    else if (v_data.at(0) == "Cooler Channels")
+    {
+      for (unsigned int i = 1; i < v_data.size(); ++i)
+      {
+        string content = v_data.at(i);
+        if (content.size() == 3) v_coolerChannel.push_back(v_data.at(i));
+      }
+    }
+  }
+  const unsigned int n_heaterThermistors = v_heaterChannel.size();
+  const unsigned int n_coolerThermistors = v_coolerChannel.size();
+  cout<<" Heater Channels: ";
   for (unsigned int i = 0; i < v_heaterChannel.size(); ++i)
     cout<<v_heaterChannel.at(i)<<" ";
   cout<<endl;
-  cout<<" Cooler channels: ";
+  cout<<" Cooler Channels: ";
   for (unsigned int i = 0; i < v_coolerChannel.size(); ++i)
     cout<<v_coolerChannel.at(i)<<" ";
   cout<<endl;
   cout<<"If any of these entries are missing of incorrect, please alert the experimentalist and report the incident to the supervisor. - Souvik Das"<<endl;
   cout<<"==========================================="<<endl;
-  // End reading metadata
+  ifs_apparatus.close();
+
 
   // Find channel indices based on metadata and data
   vector<unsigned int> v_heaterIndex,
@@ -116,21 +136,32 @@ int main(int argc, char **argv)
     cout<<"ERROR: Starting of data labels with 'Item' after metadata was not found. Aborting"<<endl;
     return 0;
   }
-  for (unsigned int i = 1; i < v_label.size(); ++i)
+  for (unsigned int i = 0; i < n_heaterThermistors; ++i)
   {
-    string channelNumber = v_label.at(i).substr(2, 11);
-    for (unsigned int j = 0; j < n_heaterThermistors; ++j)
-      if (v_heaterChannel.at(j) + "_through" == channelNumber)
+    for (unsigned int j = 1; j < v_label.size(); ++j)
+    {
+      if (v_heaterChannel.at(i) + "_through" == v_label.at(j).substr(2, 11))
       {
-        cout<<"LOG: Found channel "<<v_heaterChannel.at(j)<<endl;
-        v_heaterIndex.push_back(i);
+        cout<<"LOG: Found channel "<<v_heaterChannel.at(i)<<endl;
+        v_heaterIndex.push_back(j);
       }
-    for (unsigned int j = 0; j < n_coolerThermistors; ++j)
-      if (v_coolerChannel.at(j) + "_through" == channelNumber)
+    }
+  }
+  for (unsigned int i = 0; i < n_coolerThermistors; ++i)
+  {
+    for (unsigned int j = 1; j < v_label.size(); ++j)
+    {
+      if (v_coolerChannel.at(i) + "_through" == v_label.at(j).substr(2, 11))
       {
-        cout<<"LOG: Found channel "<<v_coolerChannel.at(j)<<endl;
-        v_coolerIndex.push_back(i);
+        cout<<"LOG: Found channel "<<v_coolerChannel.at(i)<<endl;
+        v_coolerIndex.push_back(j);
       }
+    }
+  }
+  if (v_heaterIndex.size() == 0 || v_coolerIndex.size() == 0)
+  {
+    cout<<"ERROR: Number of heater channels found = "<<v_heaterIndex.size()<<", cooler channels found = "<<v_coolerIndex.size()<<". This is insufficient for data analysis. Aborting."<<endl;
+    return 0;
   }
 
   // Extract data
