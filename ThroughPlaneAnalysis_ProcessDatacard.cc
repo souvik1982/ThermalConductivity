@@ -27,6 +27,7 @@ using namespace std;
 // Forward declared functions
 void splitLine(string &line, vector<string> &words, char separator); // Splits a line into a vector of strings
 double quad(double a=0, double b=0, double c=0, double d=0, double e=0, double f=0, double g=0, double h=0, double i=0, double j=0, double k=0);
+int roughEstimateSlopeIntercept(vector<double> v_x, vector<double> v_y, double &slope, double &intercept);
 
 // Main program
 int main()
@@ -176,7 +177,9 @@ int main()
   }
   double x_sampleHotEnd = n_heaterThermistors * apparatus_thermistorDistance; // wrt hottest thermistor of hot fluxmeter
   double x_sampleColdEnd = -apparatus_thermistorDistance;                     // wrt hottest thermistor of cold fluxmeter
-  
+
+  double slope, intercept; // Used for rough estimate of slope and intercept to help fits
+
   // Fit the basic Heater Region plot
   TGraphErrors *g_HeaterFlux = new TGraphErrors(n_heaterThermistors, &v_heaterPosition[0], &v_heaterRegionAvg[0], &v_heaterPositionErr[0], &v_heaterRegionErr[0]);
   g_HeaterFlux->SetTitle("; Thermistor Position (mm); Average Thermistor Temperature (^{#circ}C)");
@@ -184,10 +187,18 @@ int main()
   g_HeaterFlux->SetMarkerStyle(8);
   g_HeaterFlux->SetMarkerSize(1);
   TF1 *f_linear_heater = new TF1("f_linear_heater", "[0]+[1]*x", -2., 40.);
-  f_linear_heater->SetParLimits(0, 5.1, 50.1);
-  f_linear_heater->SetParLimits(1, -1., 0.);
+  if (roughEstimateSlopeIntercept(v_heaterPosition, v_heaterRegionAvg, slope, intercept))
+  {
+    f_linear_heater->SetParLimits(0, 0.5*intercept, 2.0*intercept);
+    f_linear_heater->SetParLimits(1, 2.0*slope, 0.5*slope);
+  }
+  else
+  {
+    f_linear_heater->SetParLimits(0, 5.1, 50.1);
+    f_linear_heater->SetParLimits(1, -1., 0.);
+  }
   f_linear_heater->SetLineColor(kBlack);
-  g_HeaterFlux->Fit(f_linear_heater, "QR+");
+  g_HeaterFlux->Fit(f_linear_heater, "R+");
   TCanvas* c_HeaterFlux = new TCanvas();
   g_HeaterFlux->Draw("AP");
   c_HeaterFlux->SaveAs("c_HeaterFlux.png");
@@ -200,10 +211,18 @@ int main()
   g_CoolerFlux->SetMarkerStyle(8);
   g_CoolerFlux->SetMarkerSize(1);
   TF1 *f_linear_cooler = new TF1("f_linear_cooler", "[0]+[1]*x", -2., 40.);
-  f_linear_cooler->SetParLimits(0, -5.1, 15.1);
-  f_linear_cooler->SetParLimits(1, -0.10, 0.);
+  if (roughEstimateSlopeIntercept(v_coolerPosition, v_coolerRegionAvg, slope, intercept))
+  {
+    f_linear_cooler->SetParLimits(0, 0.5*intercept, 2.0*intercept);
+    f_linear_cooler->SetParLimits(1, 2.0*slope, 0.5*slope);
+  }
+  else
+  {
+    f_linear_cooler->SetParLimits(0, -5.1, 15.1);
+    f_linear_cooler->SetParLimits(1, -0.50, -0.001);
+  }
   f_linear_cooler->SetLineColor(kBlack);
-  g_CoolerFlux->Fit(f_linear_cooler, "R+");
+  g_CoolerFlux->Fit(f_linear_cooler, "QR+");
   TCanvas* c_CoolerFlux = new TCanvas();
   g_CoolerFlux->Draw("AP");
   c_CoolerFlux->SaveAs("c_CoolerFlux.png");
@@ -216,8 +235,16 @@ int main()
   g_HeaterDiffFlux->SetMarkerStyle(8);
   g_HeaterDiffFlux->SetMarkerSize(1);
   TF1 *f_linear_heater_diff = new TF1("f_linear_heater_diff", "[0]+[1]*x", -2., 40.);
-  f_linear_heater_diff->SetParLimits(0, -0.01, 0.01);
-  f_linear_heater_diff->SetParLimits(1, -1., 0.);
+  if (roughEstimateSlopeIntercept(v_heaterPosition, v_heaterRegionDiffAvg, slope, intercept))
+  {
+    f_linear_heater_diff->SetParLimits(0, 0.5*intercept, 2.0*intercept);
+    f_linear_heater_diff->SetParLimits(1, 2.0*slope, 0.5*slope);
+  }
+  else
+  {
+    f_linear_heater_diff->SetParLimits(0, -0.01, 0.01);
+    f_linear_heater_diff->SetParLimits(1, -1., 0.);
+  }
   f_linear_heater_diff->SetLineColor(kBlack);
   g_HeaterDiffFlux->Fit(f_linear_heater_diff, "QR+");
   TCanvas* c_HeaterDiffFlux = new TCanvas();
@@ -232,8 +259,16 @@ int main()
   g_CoolerDiffFlux->SetMarkerStyle(8);
   g_CoolerDiffFlux->SetMarkerSize(1);
   TF1 *f_linear_cooler_diff = new TF1("f_linear_cooler_diff", "[0]+[1]*x", -2., 40.);
-  f_linear_cooler_diff->SetParLimits(0, -0.01, 0.01);
-  f_linear_cooler_diff->SetParLimits(1, -1., 0.);
+  if (roughEstimateSlopeIntercept(v_coolerPosition, v_coolerRegionDiffAvg, slope, intercept))
+  {
+    f_linear_cooler_diff->SetParLimits(0, 0.5*intercept, 2.0*intercept);
+    f_linear_cooler_diff->SetParLimits(1, 2.0*slope, 0.5*slope);
+  }
+  else
+  {
+    f_linear_cooler_diff->SetParLimits(0, -0.01, 0.01);
+    f_linear_cooler_diff->SetParLimits(1, -1., 0.);
+  }
   f_linear_cooler_diff->SetLineColor(kBlack);
   g_CoolerDiffFlux->Fit(f_linear_cooler_diff, "QR+");
   TCanvas* c_CoolerDiffFlux = new TCanvas();
@@ -344,4 +379,17 @@ void splitLine(string &line, vector<string> &words, char delimiter)
 
 double quad(double a, double b, double c, double d, double e, double f, double g, double h, double i, double j, double k){
   return pow(a*a+b*b+c*c+d*d+e*e+f*f+g*g+h*h+i*i+j*j+k*k, 0.5);
+}
+
+int roughEstimateSlopeIntercept(vector<double> v_x, vector<double> v_y, double &slope, double &intercept)
+{
+  if (v_x.size() != v_y.size())
+  {
+    cout<<"WARNING: In roughEstimateSlopeIntercept(v_x, v_y), sizes of the two vectors don't match. Rough estimates will not be returned."<<endl;
+    return 0;
+  }
+  int n = v_x.size();
+  slope = (v_y.at(n-1) - v_y.at(0)) / (v_x.at(n-1) - v_x.at(0));
+  intercept = v_y.at(0) - slope*v_x.at(0);
+  return 1;
 }
