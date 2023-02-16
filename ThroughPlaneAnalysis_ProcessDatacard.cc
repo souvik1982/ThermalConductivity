@@ -198,7 +198,7 @@ int main()
     f_linear_heater->SetParLimits(1, -1., 0.);
   }
   f_linear_heater->SetLineColor(kBlack);
-  g_HeaterFlux->Fit(f_linear_heater, "R+");
+  g_HeaterFlux->Fit(f_linear_heater, "QR+");
   TCanvas* c_HeaterFlux = new TCanvas();
   g_HeaterFlux->Draw("AP");
   c_HeaterFlux->SaveAs("c_HeaterFlux.png");
