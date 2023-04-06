@@ -73,6 +73,7 @@ int main()
         else if (key == "R (K/W)")   {v_R.push_back(stod(v_words.at(1))); v_R_err.push_back(stod(v_words.at(2)));}
         else if (key == "Apparatus fluxmeter diameter (mm)") sample_diameter = stod(v_words.at(1));
       }
+      cout<<"LOG: Processed "<<filename<<endl;
     }
     else
     {

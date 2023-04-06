@@ -189,8 +189,10 @@ int main()
   TF1 *f_linear_heater = new TF1("f_linear_heater", "[0]+[1]*x", -2., 40.);
   if (roughEstimateSlopeIntercept(v_heaterPosition, v_heaterRegionAvg, slope, intercept))
   {
-    f_linear_heater->SetParLimits(0, 0.5*intercept, 2.0*intercept);
-    f_linear_heater->SetParLimits(1, 2.0*slope, 0.5*slope);
+    cout<<"intercept = "<<intercept<<", slope = "<<slope<<endl;
+
+    f_linear_heater->SetParLimits(0, 0., 2.0*intercept);
+    f_linear_heater->SetParLimits(1, 2.*slope, 0.01*slope);
   }
   else
   {
@@ -213,8 +215,8 @@ int main()
   TF1 *f_linear_cooler = new TF1("f_linear_cooler", "[0]+[1]*x", -2., 40.);
   if (roughEstimateSlopeIntercept(v_coolerPosition, v_coolerRegionAvg, slope, intercept))
   {
-    f_linear_cooler->SetParLimits(0, 0.5*intercept, 2.0*intercept);
-    f_linear_cooler->SetParLimits(1, 2.0*slope, 0.5*slope);
+    f_linear_cooler->SetParLimits(0, 0.1*intercept, 2.0*intercept);
+    f_linear_cooler->SetParLimits(1, -1., 0.);
   }
   else
   {
@@ -237,8 +239,8 @@ int main()
   TF1 *f_linear_heater_diff = new TF1("f_linear_heater_diff", "[0]+[1]*x", -2., 40.);
   if (roughEstimateSlopeIntercept(v_heaterPosition, v_heaterRegionDiffAvg, slope, intercept))
   {
-    f_linear_heater_diff->SetParLimits(0, 0.5*intercept, 2.0*intercept);
-    f_linear_heater_diff->SetParLimits(1, 2.0*slope, 0.5*slope);
+    f_linear_heater_diff->SetParLimits(0, 0.1*intercept, 2.0*intercept);
+    f_linear_heater_diff->SetParLimits(1, -1., 0.);
   }
   else
   {
@@ -261,8 +263,8 @@ int main()
   TF1 *f_linear_cooler_diff = new TF1("f_linear_cooler_diff", "[0]+[1]*x", -2., 40.);
   if (roughEstimateSlopeIntercept(v_coolerPosition, v_coolerRegionDiffAvg, slope, intercept))
   {
-    f_linear_cooler_diff->SetParLimits(0, 0.5*intercept, 2.0*intercept);
-    f_linear_cooler_diff->SetParLimits(1, 2.0*slope, 0.5*slope);
+    f_linear_cooler_diff->SetParLimits(0, 0.1*intercept, 2.0*intercept);
+    f_linear_cooler_diff->SetParLimits(1, -1., 0.);
   }
   else
   {
@@ -287,7 +289,7 @@ int main()
   double j_out_err = f_linear_cooler_diff->GetParError(1)*1000.*apparatus_fluxmeterConductivity;
 
   double j_avg = (j_in + j_out)/2.;
-  double j_err = quad((j_in - j_out)/2., j_in_err/(2.*j_in), j_out_err/(2.*j_out));
+  double j_err = quad((j_in - j_out)/2., j_in_err/2., j_out_err/2.);
 
   double i_avg = j_avg * area;
   double i_err = j_err * area;

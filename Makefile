@@ -1,7 +1,9 @@
 ROOTFLAGS = $(shell root-config --cflags)
 ROOTLIBS  = $(shell root-config --libs)
 
-all: ThroughPlaneAnalysis_ReadRaw ThroughPlaneAnalysis_ProcessDatacard ThroughPlaneAnalysis_Metaslope
+all: ThroughPlaneAnalysis_ReadRaw ThroughPlaneAnalysis_ProcessDatacard ThroughPlaneAnalysis_Metaslope InPlaneAnalysis_ReadRaw
+clean:
+	rm ThroughPlaneAnalysis_ReadRaw ThroughPlaneAnalysis_ProcessDatacard ThroughPlaneAnalysis_Metaslope InPlaneAnalysis_ReadRaw
 
 ThroughPlaneAnalysis_ReadRaw: ThroughPlaneAnalysis_ReadRaw.cc
 	g++ -O2 ThroughPlaneAnalysis_ReadRaw.cc -o ThroughPlaneAnalysis_ReadRaw $(ROOTFLAGS) $(ROOTLIBS) -mmacosx-version-min=12.6
@@ -11,3 +13,6 @@ ThroughPlaneAnalysis_ProcessDatacard: ThroughPlaneAnalysis_ProcessDatacard.cc
 
 ThroughPlaneAnalysis_Metaslope: ThroughPlaneAnalysis_Metaslope.cc
 	g++ -O2 ThroughPlaneAnalysis_Metaslope.cc -o ThroughPlaneAnalysis_Metaslope $(ROOTFLAGS) $(ROOTLIBS) -mmacosx-version-min=12.6
+
+InPlaneAnalysis_ReadRaw: InPlaneAnalysis_ReadRaw.cc
+	g++ -O2 InPlaneAnalysis_ReadRaw.cc -o InPlaneAnalysis_ReadRaw $(ROOTFLAGS) $(ROOTLIBS) -mmacosx-version-min=12.6
