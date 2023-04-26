@@ -44,6 +44,9 @@ int main()
          meta_apparatus,
          meta_material,
          meta_sample;
+  double meta_length, meta_lengthErr,
+         meta_width, meta_widthErr,
+         meta_thickness, meta_thicknessErr;
   vector<double> v_heaterRegionAvg, v_coolerRegionAvg,
                  v_heaterRegionErr, v_coolerRegionErr,
                  v_heaterRegionDiffAvg, v_coolerRegionDiffAvg,
@@ -60,6 +63,9 @@ int main()
     if (v_data.at(0) == "Apparatus")           meta_apparatus = v_data.at(1);
     if (v_data.at(0) == "Material")            meta_material = v_data.at(1);
     if (v_data.at(0) == "Sample")              meta_sample = v_data.at(1);
+    if (v_data.at(0) == "Length (mm)")         {meta_length = stod(v_data.at(1)); meta_lengthErr = stod(v_data.at(2));}
+    if (v_data.at(0) == "Width (mm)")          {meta_width = stod(v_data.at(1)); meta_widthErr = stod(v_data.at(2));}
+    if (v_data.at(0) == "Thickness (mm)")      {meta_thickness = stod(v_data.at(1));meta_thicknessErr = stod(v_data.at(2));}
     if (v_data.at(0) == "Hot Fluxmeter Temperatures (C)")
       for (unsigned int i = 1; i < v_data.size(); ++i)
         v_heaterRegionAvg.push_back(stod(v_data.at(i)));
@@ -304,6 +310,8 @@ int main()
 
   // Calculate results
   double area = apparatus_fluxmeterWidth*apparatus_fluxmeterThickness/1e6;
+  double sample_area = meta_width*meta_thickness/1e6;
+  double sample_areaErr = sample_area*quad((meta_widthErr/meta_width), (meta_thicknessErr/meta_thickness));
 
   double j_in = -f_linear_heater_diff->GetParameter(1)*1000.*apparatus_fluxmeterConductivity;
   double j_in_err = f_linear_heater_diff->GetParError(1)*1000.*apparatus_fluxmeterConductivity;
@@ -328,6 +336,9 @@ int main()
 
   double R = deltaT/i_avg;
   double R_err = R * quad((deltaT_err/deltaT), (i_err/i_avg));
+
+  double RA = R*sample_area;
+  double RA_err = RA * quad((R_err/R), (sample_areaErr/sample_area));
 
   // Results which should be readable by CSV and HTML readers
   system("cp Datacard.html SampleResults.html");
@@ -356,6 +367,7 @@ int main()
   ofs_results<<"Temperature at cold end of sample (C), "<<T_cold<<" +/- "<<T_cold_err<<endl;
   ofs_results<<"deltaT (C), "<<deltaT<<" +/- "<<deltaT_err<<endl;
   ofs_results<<"R (K/W), "<<R<<", "<<R_err<<endl;
+  ofs_results<<"RA (Km^2/W), "<<RA<<", "<<RA_err<<endl;
   ofs_results<<"</pre>"<<endl;
   ofs_results<<"<table border='1'>"<<endl;
   ofs_results<<" <tr>"<<endl;

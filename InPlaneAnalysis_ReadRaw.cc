@@ -69,9 +69,9 @@ int main(int argc, char **argv)
     else if (key == "Apparatus")       meta_apparatus = v_metaData.at(1);
     else if (key == "Material")        meta_material = v_metaData.at(1);
     else if (key == "Sample")          meta_sample = v_metaData.at(1);
-    else if (key == "Length (um)")     {meta_length = v_metaData.at(1); meta_lengthErr = v_metaData.at(2);}
-    else if (key == "Width (um)")      {meta_width = v_metaData.at(1); meta_widthErr = v_metaData.at(2);}
-    else if (key == "Thickness (um)")  {meta_thickness = v_metaData.at(1); meta_thicknessErr = v_metaData.at(2);}
+    else if (key == "Length (mm)")     {meta_length = v_metaData.at(1); meta_lengthErr = v_metaData.at(2);}
+    else if (key == "Width (mm)")      {meta_width = v_metaData.at(1); meta_widthErr = v_metaData.at(2);}
+    else if (key == "Thickness (mm)")  {meta_thickness = v_metaData.at(1); meta_thicknessErr = v_metaData.at(2);}
     else if (key == "Heater Voltage (V)")  meta_heaterVoltage = v_metaData.at(1);
     else if (key == "Cooler Voltage (V)")  meta_coolerVoltage = v_metaData.at(1);
     else if (key == "Item")            b_readMeta = false;
@@ -455,9 +455,9 @@ int main(int argc, char **argv)
   ofs_datacard<<"Apparatus, "<<meta_apparatus<<endl;
   ofs_datacard<<"Material, "<<meta_material<<endl;
   ofs_datacard<<"Sample, "<<meta_sample<<endl;
-  ofs_datacard<<"Length (um), "<<meta_length<<", "<<meta_lengthErr<<endl;
-  ofs_datacard<<"Width (um), "<<meta_width<<", "<<meta_widthErr<<endl;
-  ofs_datacard<<"Thickness (um), "<<meta_thickness<<", "<<meta_thicknessErr<<endl;
+  ofs_datacard<<"Length (mm), "<<meta_length<<", "<<meta_lengthErr<<endl;
+  ofs_datacard<<"Width (mm), "<<meta_width<<", "<<meta_widthErr<<endl;
+  ofs_datacard<<"Thickness (mm), "<<meta_thickness<<", "<<meta_thicknessErr<<endl;
   ofs_datacard<<"Heater Voltage, "<<meta_heaterVoltage<<endl;
   ofs_datacard<<"Cooler Voltage, "<<meta_coolerVoltage<<endl;
   ofs_datacard<<"Hot Fluxmeter Channels, "<<v_heaterChannel.at(0);
