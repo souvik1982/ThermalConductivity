@@ -24,15 +24,14 @@ April 2023, Souvik Das
 #include "TVirtualFitter.h"
 
 #include "CorrelatedDataFitter.cc"
+#include "TMinuit.h"
 
 using namespace std;
 
-double corrUnc = 0.5; // Correlation of uncertainties between data points.
+double correlation = 0.5; // Correlation of uncertainties between data points.
 
 // Forward declared functions
 void splitLine(string &line, vector<string> &words, char separator); // Splits a line into a vector of strings
-double quad(double a=0, double b=0, double c=0, double d=0, double e=0, double f=0, double g=0, double h=0, double i=0, double j=0, double k=0);
-// extern void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag);
 
 int main()
 {
@@ -58,10 +57,10 @@ int main()
 
   // Search for SampleResults.html in subfolders containing samples of this material analyzed
   // Fill the vectors for the metaslope graph
-  vector<double> v_length, v_length_err,
-                 v_width, v_width_err,
-                 v_thickness, v_thickness_err,
-                 v_RA, v_RA_err;
+  vector<Double_t> v_length, v_length_err,
+                   v_width, v_width_err,
+                   v_thickness, v_thickness_err,
+                   v_RA, v_RA_err;
   for (unsigned int i = 0; i < v_samples.size(); ++i)
   {
     string filename = meta_material+"_"+v_samples.at(i)+"/SampleResults.html";
@@ -85,20 +84,37 @@ int main()
     }
   }
 
-  TF1 *f_linear = new TF1("f_linear", "[0] + [1]*x");
+  ofstream ofs_result("Result.html");
+  ofs_result<<"<pre>"<<endl;
+  ofs_result<<"Through-plane thermal conductivity measurement"<<endl;
+  ofs_result<<"Analyst: "<<meta_analyst<<endl;
+  ofs_result<<"Analysis date: "<<meta_analysisDate<<endl;
+  ofs_result<<"Material: "<<meta_material<<endl;
+  ofs_result<<"</pre>"<<endl;
+  ofs_result<<"<hr/>"<<endl;
+  ofs_result<<"Underlying sample results: <br/>"<<endl;
+  for (unsigned int i = 0; i < v_samples.size(); ++i)
+  {
+    string href = meta_material+"_"+v_samples.at(i)+"/SampleResults.html";
+    ofs_result<<"<a href = '"<<href<<"' target='_blank'>"<<meta_material<<"_"+v_samples.at(i)<<"</a> <br/>"<<endl;
+  }
+  ofs_result<<"<hr/>"<<endl;
+
+  // Naive fit with no correlation between data points
+  TF1 *f_linear = new TF1("f_linear", "[0] + [1]*x", v_length.at(0) - 2, v_length.at(v_length.size() - 1) + 2);
   f_linear->SetLineColor(1);
 
-  TGraphErrors *g_metaSlope = new TGraphErrors(v_length.size(), &v_length[0], &v_RA[0], &v_length_err[0], &v_RA_err[0]);
-  g_metaSlope->SetTitle("; Sample length (#mm); Thermal insulance (Km^{2}/W)");
-
-  g_metaSlope->Fit(f_linear);
-  TGraphErrors *g_metaSlope_confidence = new TGraphErrors(v_length.size(), &v_length[0], &v_RA[0]);
-  (TVirtualFitter::GetFitter())->GetConfidenceIntervals(g_metaSlope_confidence);
-  g_metaSlope_confidence->SetFillColorAlpha(1, 0.3); g_metaSlope_confidence->SetFillStyle(3209);
+  TGraphErrors *g_metaslope = new TGraphErrors(v_length.size(), &v_length[0], &v_RA[0], &v_length_err[0], &v_RA_err[0]);
+  g_metaslope->SetMarkerStyle(8);
+  g_metaslope->Fit(f_linear, "R");
+  TGraphErrors *g_metaslope_confidence = new TGraphErrors(v_length.size(), &v_length[0], &v_RA[0]);
+  g_metaslope_confidence->SetTitle("; Sample length (mm); Thermal insulance (Km^{2}/W)");
+  (TVirtualFitter::GetFitter())->GetConfidenceIntervals(g_metaslope_confidence);
+  g_metaslope_confidence->SetFillColorAlpha(1, 0.3); g_metaslope_confidence->SetFillStyle(3209);
 
   TCanvas *c_metaSlope = new TCanvas();
-  g_metaSlope_confidence->Draw("AP3");
-  g_metaSlope->Draw("PSAME");
+  g_metaslope_confidence->Draw("AP3");
+  g_metaslope->Draw("PSAME");
   c_metaSlope->SaveAs(("c_metaSlope_"+meta_material+".png").c_str());
   c_metaSlope->SaveAs(("c_metaSlope_"+meta_material+".pdf").c_str());
 
@@ -108,29 +124,50 @@ int main()
   double intercept_err = f_linear->GetParError(0);
 
   double k = 1./(slope*1e3);
-  double k_err = k * quad(slope_err/slope);
-
-  ofstream ofs_result("Result.html");
-  ofs_result<<"<pre>"<<endl;
-  ofs_result<<"Through-plane thermal conductivity measurement"<<endl;
-  ofs_result<<"Analyst: "<<meta_analyst<<endl;
-  ofs_result<<"Analysis date: "<<meta_analysisDate<<endl;
-  ofs_result<<"Material: "<<meta_material<<endl;
-  ofs_result<<"k = "<<k<<" +/- "<<k_err<<" W/mK"<<endl;
-  ofs_result<<"</pre>"<<endl;
-  ofs_result<<"Underlying sample results: <br/>"<<endl;
-  for (unsigned int i = 0; i < v_samples.size(); ++i)
-  {
-    string href = meta_material+"_"+v_samples.at(i)+"/SampleResults.html";
-    ofs_result<<"<a href = '"<<href<<"' target='_blank'>"<<meta_material<<"_"+v_samples.at(i)<<"</a> <br/>"<<endl;
-  }
+  double k_err = k * slope_err/slope;
   ofs_result<<"<img src='c_metaSlope_"<<meta_material<<".png'/> <br/>"<<endl;
+  ofs_result<<"Iterative fit with no correlations between data points. k = "<<k<<" +/- "<<k_err<<" W/mK"<<endl;
+  ofs_result<<"<hr/>"<<endl;
+
+  // Analytical fit with correlation
+  CorrelatedDataFitter correlatedDataFitter(correlation, v_length, v_RA, v_length_err, v_RA_err);
+  double slope_analytical, slope_err_analytical, intercept_analytical, intercept_err_analytical;
+  TGraphErrors *g_metaslope_analytical = correlatedDataFitter.getAnalyticalFit(slope_analytical, slope_err_analytical, intercept_analytical, intercept_err_analytical);
+  g_metaslope_analytical->SetTitle("; Sample length (mm); Thermal insulance (Km^{2}/W)");
+  g_metaslope_analytical->SetMarkerStyle(8);
+
+  double k_analytical = 1./(slope_analytical*1e3);
+  double k_err_analytical = k_analytical * slope_err_analytical/slope_analytical;
+
+  TCanvas *c_metaslope_analytical = new TCanvas();
+  g_metaslope_analytical->Draw("AP");
+  c_metaslope_analytical->SaveAs(("c_metaSlope_analytical_"+meta_material+".png").c_str());
+  ofs_result<<"<img src='c_metaSlope_analytical_"<<meta_material<<".png'/> <br/>"<<endl;
+  ofs_result<<"Analytical fit with "<<correlation<<" correlation between data point uncertainties. k = "<<k_analytical<<" +/- "<<k_err_analytical<<" W/mK"<<endl;
+  ofs_result<<"<hr/>"<<endl;
+
+  // Minuit Fit with correlation
+  double slope_minuit, slope_err_minuit, intercept_minuit, intercept_err_minuit;
+  TCanvas *c_metaSlope_minuit = correlatedDataFitter.getMinuitFit("; Sample length (mm); Thermal insulance (Km^{2}/W)", slope_minuit, slope_err_minuit, intercept_minuit, intercept_err_minuit);
+  // g_metaslope_confidence->SetTitle("; Sample length (mm); Thermal insulance (Km^{2}/W)");
+  // (TVirtualFitter::GetFitter())->GetConfidenceIntervals(g_metaslope_confidence);
+
+  double k_minuit = 1./(slope_minuit*1e3);
+  double k_err_minuit = k_minuit * slope_err_minuit / slope_minuit;
+
+  //TCanvas *c_minuitMetaSlope = new TCanvas();
+  //g_metaslope_confidence->Draw("AP3");
+  //g_minuitMetaSlope->Draw("PSAME");
+  c_metaSlope_minuit->SaveAs(("c_metaSlope_minuit_"+meta_material+".png").c_str());
+  ofs_result<<"<img src='c_metaSlope_minuit_"<<meta_material<<".png'/> <br/>"<<endl;
+  ofs_result<<"Iterative Minuit fit with "<<correlation<<" correlation between data point uncertainties. k = "<<k_minuit<<" +/- "<<k_err_minuit<<" W/mK"<<endl;
+
+
   ofs_result.close();
   cout<<"Result in Result.html"<<endl;
   system("open Result.html");
 
-  // Test inversion of correlation function
-  CorrelatedDataFitter correlatedDataFitter(0.0, v_length, v_RA, v_length_err, v_RA_err);
+
 
 }
 
@@ -149,8 +186,4 @@ void splitLine(string &line, vector<string> &words, char delimiter)
     getline(ss, word, delimiter);
     words.push_back(removeLeadingSpaces(word));
   }
-}
-
-double quad(double a, double b, double c, double d, double e, double f, double g, double h, double i, double j, double k){
-  return pow(a*a+b*b+c*c+d*d+e*e+f*f+g*g+h*h+i*i+j*j+k*k, 0.5);
 }

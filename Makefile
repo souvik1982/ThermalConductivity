@@ -23,5 +23,5 @@ InPlaneAnalysis_ReadRaw: InPlaneAnalysis_ReadRaw.cc
 InPlaneAnalysis_ProcessDatacard: InPlaneAnalysis_ProcessDatacard.cc
 	g++ -O2 InPlaneAnalysis_ProcessDatacard.cc -o InPlaneAnalysis_ProcessDatacard $(ROOTFLAGS) $(ROOTLIBS) -mmacosx-version-min=12.6
 
-InPlaneAnalysis_Metaslope: InPlaneAnalysis_Metaslope.cc
-	g++ -O2 InPlaneAnalysis_Metaslope.cc -o InPlaneAnalysis_Metaslope $(ROOTFLAGS) $(ROOTLIBS) -mmacosx-version-min=12.6
+InPlaneAnalysis_Metaslope: InPlaneAnalysis_Metaslope.cc CorrelatedDataFitter.o
+	g++ -O2 -g InPlaneAnalysis_Metaslope.cc -o InPlaneAnalysis_Metaslope $(ROOTFLAGS) $(ROOTLIBS) -mmacosx-version-min=12.6 -lMinuit
