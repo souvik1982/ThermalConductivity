@@ -55,6 +55,34 @@ int main()
   vector<string> v_samples;
   splitLine(line, v_samples, ',');
 
+  // Read FEAHeatLoss.html file and incorporate uncertainties into v_RA_err
+  bool bool_FEA = false;
+  ifstream ifs_FEA;
+  try
+  {
+    ifs_FEA.open("FEAHeatLoss.html");
+    throw 0;
+    bool_FEA = true;
+  }
+  catch(...)
+  {
+    cout<<"WARN: FEAHeatLoss.html containing heat loss uncertainty estimated by FEA not found. Such uncertainties will not be incorporated."<<endl;
+  }
+
+  // Start writing Result.html
+  ofstream ofs_result("Result.html");
+  ofs_result<<"<pre>"<<endl;
+  ofs_result<<"====================================================="<<endl;
+  ofs_result<<"In-plane thermal conductivity measurement"<<endl;
+  ofs_result<<"Output of InPlaneAnalysis_Metaslope. Souvik Das, 2023"<<endl;
+  ofs_result<<"====================================================="<<endl;
+  ofs_result<<"Analyst: "<<meta_analyst<<endl;
+  ofs_result<<"Analysis date: "<<meta_analysisDate<<endl;
+  ofs_result<<"Material: "<<meta_material<<endl;
+  ofs_result<<"</pre>"<<endl;
+  ofs_result<<"<hr/>"<<endl;
+  ofs_result<<"Underlying sample results: <br/>"<<endl;
+
   // Search for SampleResults.html in subfolders containing samples of this material analyzed
   // Fill the vectors for the metaslope graph
   vector<Double_t> v_length, v_length_err,
@@ -77,27 +105,34 @@ int main()
         else if (key == "RA (Km^2/W)")   {v_RA.push_back(stod(v_words.at(1))); v_RA_err.push_back(stod(v_words.at(2)));}
       }
       cout<<"LOG: Processed "<<filename<<endl;
+      ofs_result<<"<a href = '"<<filename<<"' target='_blank'>"<<meta_material<<"_"+v_samples.at(i)<<"</a>";
     }
     else
     {
       std::cout<<"ERROR: "<<filename<<" does not exist. Skipping it.";
     }
+
+    if (bool_FEA)
+    {
+      while (getline(ifs_FEA, line))
+      {
+        vector<string> v_words;
+        splitLine(line, v_words, ',');
+        string key = v_words.at(0);
+        if (key == meta_material+"_"+v_samples.at(i))
+        {
+          double error_FEA = stod(v_words.at(1));
+          v_RA_err.at(i) += v_RA.at(i) * error_FEA;
+          cout<<"LOG: FEA Heat Loss uncertainty. Added fractional uncertainty of "<<error_FEA<<" to "<<key<<endl;
+          ofs_result<<", FEA Heat Loss uncertainty = "<<error_FEA;
+        }
+      }
+      ifs_FEA.clear();
+      ifs_FEA.seekg(0, ios::beg);
+    }
+    ofs_result<<"</br>"<<endl;
   }
 
-  ofstream ofs_result("Result.html");
-  ofs_result<<"<pre>"<<endl;
-  ofs_result<<"Through-plane thermal conductivity measurement"<<endl;
-  ofs_result<<"Analyst: "<<meta_analyst<<endl;
-  ofs_result<<"Analysis date: "<<meta_analysisDate<<endl;
-  ofs_result<<"Material: "<<meta_material<<endl;
-  ofs_result<<"</pre>"<<endl;
-  ofs_result<<"<hr/>"<<endl;
-  ofs_result<<"Underlying sample results: <br/>"<<endl;
-  for (unsigned int i = 0; i < v_samples.size(); ++i)
-  {
-    string href = meta_material+"_"+v_samples.at(i)+"/SampleResults.html";
-    ofs_result<<"<a href = '"<<href<<"' target='_blank'>"<<meta_material<<"_"+v_samples.at(i)<<"</a> <br/>"<<endl;
-  }
   ofs_result<<"<hr/>"<<endl;
 
   // Naive fit with no correlation between data points
@@ -155,19 +190,13 @@ int main()
   double k_minuit = 1./(slope_minuit*1e3);
   double k_err_minuit = k_minuit * slope_err_minuit / slope_minuit;
 
-  //TCanvas *c_minuitMetaSlope = new TCanvas();
-  //g_metaslope_confidence->Draw("AP3");
-  //g_minuitMetaSlope->Draw("PSAME");
   c_metaSlope_minuit->SaveAs(("c_metaSlope_minuit_"+meta_material+".png").c_str());
   ofs_result<<"<img src='c_metaSlope_minuit_"<<meta_material<<".png'/> <br/>"<<endl;
   ofs_result<<"Iterative Minuit fit with "<<correlation<<" correlation between data point uncertainties. k = "<<k_minuit<<" +/- "<<k_err_minuit<<" W/mK"<<endl;
 
-
   ofs_result.close();
   cout<<"Result in Result.html"<<endl;
   system("open Result.html");
-
-
 
 }
 
