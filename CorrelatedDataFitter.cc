@@ -22,7 +22,6 @@ class CorrelatedDataFitter
 {
 public:
   CorrelatedDataFitter(double correlation, vector<double> v_x, vector<double> v_y, vector<double> v_xErr, vector<double> v_yErr);
-  ~CorrelatedDataFitter();
   TCanvas* getMinuitFit(string title, double &m, double &dm, double &c, double &dc);
   TGraphErrors* getAnalyticalFit(double &m, double &dm, double &c, double &dc);
 };
@@ -166,11 +165,6 @@ TCanvas* CorrelatedDataFitter::getMinuitFit(string title, double &slope, double 
   h_band->Draw("E3 SAME");
 
   return c;
-}
-
-CorrelatedDataFitter::~CorrelatedDataFitter()
-{
-  // delete[] global_array_Cij_inv;
 }
 
 Double_t fitFunction(Double_t x, Double_t *par)
