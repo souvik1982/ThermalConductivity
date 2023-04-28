@@ -38,7 +38,7 @@ CorrelatedDataFitter::CorrelatedDataFitter(double correlation, vector<double> v_
   // Add arbitrary correlations between data points before fitting them.
   // First, construct the covariance matrix Cij and invert it.
   Double_t array_Cij[global_n*global_n];
-  cout<<"Cij = "<<endl;
+  // cout<<"Cij = "<<endl;
   for (unsigned int i=0; i<global_n; ++i)
   {
     for (unsigned int j=0; j<global_n; ++j)
@@ -47,22 +47,22 @@ CorrelatedDataFitter::CorrelatedDataFitter(double correlation, vector<double> v_
         array_Cij[i*global_n+j] = pow(v_yErr.at(i), 2);
       else
         array_Cij[i*global_n+j] = correlation*v_yErr.at(i)*v_yErr.at(j);
-      cout<<array_Cij[i*global_n+j]<<" ";
+      // cout<<array_Cij[i*global_n+j]<<" ";
     }
-    cout<<endl;
+    // cout<<endl;
   }
-  cout<<"Inv(Cij) =  "<<endl;
+  // cout<<"Inv(Cij) =  "<<endl;
   TMatrixD Cij_inv(global_n, global_n);
   Cij_inv.SetMatrixArray(array_Cij);
   Cij_inv.Invert();
   global_array_Cij_inv = new Double_t[global_n*global_n+1];
   memcpy(global_array_Cij_inv, Cij_inv.GetMatrixArray(), global_n*global_n*sizeof(Double_t));
-  for (unsigned int i = 0; i<global_n; ++i)
+  /*for (unsigned int i = 0; i<global_n; ++i)
   {
     for (unsigned int j = 0; j<global_n; ++j)
       cout<<global_array_Cij_inv[i*global_n+j]<<" ";
     cout<<endl;
-  }
+  }*/
 }
 
 TGraphErrors* CorrelatedDataFitter::getAnalyticalFit(double &m, double &dm, double &c, double &dc)
@@ -130,8 +130,6 @@ TCanvas* CorrelatedDataFitter::getMinuitFit(string title, double &slope, double 
   Int_t i_0, i_1;
   gMinuit->mnpout(0, string_0, intercept, interceptErr, xlo_0, xhi_0, i_0);
   gMinuit->mnpout(1, string_1, slope, slopeErr, xlo_1, xhi_1, i_1);
-  cout<<"Minuit fit, slope = "<<slope<<", slopeErr = "<<slopeErr<<endl;
-  cout<<"Minuit fit, intercept = "<<intercept<<", interceptErr = "<<interceptErr<<endl;
   TF1 *f_linear = new TF1("f_linear", "[0] + [1]*x", global_v_x.at(0) - 2, global_v_x.at(global_n - 1) + 2);
   f_linear->SetParameter(0, intercept); f_linear->FixParameter(0, intercept);
   f_linear->SetParameter(1, slope); f_linear->FixParameter(1, slope);
