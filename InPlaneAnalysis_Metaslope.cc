@@ -75,6 +75,7 @@ int main()
 
   // Search for SampleResults.html in subfolders containing samples of this material analyzed
   // Fill the vectors for the metaslope graph
+  // Add FEA heat loss information if available
   vector<Double_t> v_length, v_length_err,
                    v_width, v_width_err,
                    v_thickness, v_thickness_err,
