@@ -56,18 +56,8 @@ int main()
   splitLine(line, v_samples, ',');
 
   // Read FEAHeatLoss.html file and incorporate uncertainties into v_RA_err
-  bool bool_FEA = false;
   ifstream ifs_FEA;
-  try
-  {
-    ifs_FEA.open("FEAHeatLoss.html");
-    throw 0;
-    bool_FEA = true;
-  }
-  catch(...)
-  {
-    cout<<"WARN: FEAHeatLoss.html containing heat loss uncertainty estimated by FEA not found. Such uncertainties will not be incorporated."<<endl;
-  }
+  ifs_FEA.open("FEAHeatLoss.html");
 
   // Start writing Result.html
   ofstream ofs_result("Result.html");
@@ -108,28 +98,23 @@ int main()
       ofs_result<<"<a href = '"<<filename<<"' target='_blank'>"<<meta_material<<"_"+v_samples.at(i)<<"</a>";
     }
     else
-    {
       std::cout<<"ERROR: "<<filename<<" does not exist. Skipping it.";
-    }
 
-    if (bool_FEA)
+    while (getline(ifs_FEA, line))
     {
-      while (getline(ifs_FEA, line))
+      vector<string> v_words;
+      splitLine(line, v_words, ',');
+      string key = v_words.at(0);
+      if (key == meta_material+"_"+v_samples.at(i))
       {
-        vector<string> v_words;
-        splitLine(line, v_words, ',');
-        string key = v_words.at(0);
-        if (key == meta_material+"_"+v_samples.at(i))
-        {
-          double error_FEA = stod(v_words.at(1));
-          v_RA_err.at(i) += v_RA.at(i) * error_FEA;
-          cout<<"LOG: FEA Heat Loss uncertainty. Added fractional uncertainty of "<<error_FEA<<" to "<<key<<endl;
-          ofs_result<<", FEA Heat Loss uncertainty = "<<error_FEA;
-        }
+        double error_FEA = stod(v_words.at(1));
+        v_RA_err.at(i) += v_RA.at(i) * error_FEA;
+        cout<<"LOG: FEA Heat Loss uncertainty. Added fractional uncertainty of "<<error_FEA<<" to "<<key<<endl;
+        ofs_result<<", FEA Heat Loss uncertainty = "<<error_FEA;
       }
-      ifs_FEA.clear();
-      ifs_FEA.seekg(0, ios::beg);
     }
+    ifs_FEA.clear();
+    ifs_FEA.seekg(0, ios::beg);
     ofs_result<<"</br>"<<endl;
   }
 
@@ -184,8 +169,6 @@ int main()
   // Minuit Fit with correlation
   double slope_minuit, slope_err_minuit, intercept_minuit, intercept_err_minuit;
   TCanvas *c_metaSlope_minuit = correlatedDataFitter.getMinuitFit("; Sample length (mm); Thermal insulance (Km^{2}/W)", slope_minuit, slope_err_minuit, intercept_minuit, intercept_err_minuit);
-  // g_metaslope_confidence->SetTitle("; Sample length (mm); Thermal insulance (Km^{2}/W)");
-  // (TVirtualFitter::GetFitter())->GetConfidenceIntervals(g_metaslope_confidence);
 
   double k_minuit = 1./(slope_minuit*1e3);
   double k_err_minuit = k_minuit * slope_err_minuit / slope_minuit;
@@ -197,7 +180,6 @@ int main()
   ofs_result.close();
   cout<<"Result in Result.html"<<endl;
   system("open Result.html");
-
 }
 
 string removeLeadingSpaces(string &s)
