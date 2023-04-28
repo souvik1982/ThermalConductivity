@@ -216,7 +216,7 @@ int main()
   g_HeaterFlux->GetXaxis()->SetLimits(-5., 45.);
   g_HeaterFlux->SetMarkerStyle(8);
   g_HeaterFlux->SetMarkerSize(1);
-  TF1 *f_linear_heater = new TF1("f_linear_heater", "[0]+[1]*x", -2., 40.);
+  TF1 *f_linear_heater = new TF1("f_linear_heater", "[0]+[1]*x", -2., 42.);
   if (roughEstimateSlopeIntercept(v_heaterPosition, v_heaterRegionAvg, slope, intercept))
   {
     cout<<"intercept = "<<intercept<<", slope = "<<slope<<endl;
@@ -242,7 +242,7 @@ int main()
   g_CoolerFlux->GetXaxis()->SetLimits(-5., 45.);
   g_CoolerFlux->SetMarkerStyle(8);
   g_CoolerFlux->SetMarkerSize(1);
-  TF1 *f_linear_cooler = new TF1("f_linear_cooler", "[0]+[1]*x", -2., 40.);
+  TF1 *f_linear_cooler = new TF1("f_linear_cooler", "[0]+[1]*x", -2., 42.);
   if (roughEstimateSlopeIntercept(v_coolerPosition, v_coolerRegionAvg, slope, intercept))
   {
     f_linear_cooler->SetParLimits(0, 0.1*intercept, 2.0*intercept);
@@ -266,7 +266,7 @@ int main()
   g_HeaterDiffFlux->GetXaxis()->SetLimits(-5., 45.);
   g_HeaterDiffFlux->SetMarkerStyle(8);
   g_HeaterDiffFlux->SetMarkerSize(1);
-  TF1 *f_linear_heater_diff = new TF1("f_linear_heater_diff", "[0]+[1]*x", -2., 40.);
+  TF1 *f_linear_heater_diff = new TF1("f_linear_heater_diff", "[0]+[1]*x", -2., 42.);
   if (roughEstimateSlopeIntercept(v_heaterPosition, v_heaterRegionDiffAvg, slope, intercept))
   {
     f_linear_heater_diff->SetParLimits(0, 0.1*intercept, 2.0*intercept);
@@ -290,7 +290,7 @@ int main()
   g_CoolerDiffFlux->GetXaxis()->SetLimits(-5., 45.);
   g_CoolerDiffFlux->SetMarkerStyle(8);
   g_CoolerDiffFlux->SetMarkerSize(1);
-  TF1 *f_linear_cooler_diff = new TF1("f_linear_cooler_diff", "[0]+[1]*x", -2., 40.);
+  TF1 *f_linear_cooler_diff = new TF1("f_linear_cooler_diff", "[0]+[1]*x", -2., 42.);
   if (roughEstimateSlopeIntercept(v_coolerPosition, v_coolerRegionDiffAvg, slope, intercept))
   {
     f_linear_cooler_diff->SetParLimits(0, 0.1*intercept, 2.0*intercept);
