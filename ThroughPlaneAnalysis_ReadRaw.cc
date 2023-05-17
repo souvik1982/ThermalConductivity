@@ -45,6 +45,7 @@ int main(int argc, char **argv)
   ifstream ifs_rawData(filename.c_str());
   string meta_experimentalist,
          meta_date,
+         meta_apparatus,
          meta_material,
          meta_sample,
          meta_thickness,
@@ -61,6 +62,7 @@ int main(int argc, char **argv)
     string key = v_metaData.at(0);
          if (key == "Experimentalist") meta_experimentalist = v_metaData.at(1);
     else if (key == "Date")            meta_date = v_metaData.at(1);
+    else if (key == "Apparatus")       meta_apparatus = v_metaData.at(1);
     else if (key == "Material")        meta_material = v_metaData.at(1);
     else if (key == "Sample")          meta_sample = v_metaData.at(1);
     else if (key == "Thickness (um)")  {meta_thickness = v_metaData.at(1); meta_thicknessErr = v_metaData.at(2);}
@@ -82,7 +84,13 @@ int main(int argc, char **argv)
   // End reading metadata
 
   // Read machine information from Apparatus.html
-  ifstream ifs_apparatus("Apparatus.html");
+  string env_thermalBase = string(getenv("THERMALBASE"));
+  if (env_thermalBase == "")
+  {
+    cout<<"ERROR: Environmental variable THERMALBASE not set. Aborting."<<endl;
+    return 0;
+  }
+  ifstream ifs_apparatus((env_thermalBase+"/Apparatus.html").c_str());
   if (!ifs_apparatus.good())
   {
     cout<<"ERROR: Apparatus.html containing apparatus-specific information not found. Please softlink to it from the current directory. Aborting."<<endl;
@@ -91,23 +99,39 @@ int main(int argc, char **argv)
   vector<string> v_heaterChannel, v_coolerChannel;
   string line_apparatus;
   while (getline(ifs_apparatus, line_apparatus, '\n'))
+  while (getline(ifs_apparatus, line_apparatus, '\n'))
   {
     vector<string> v_data;
     splitLine(line_apparatus, v_data, ',');
-    if (v_data.at(0) == "Heater Channels")
+    if (v_data.at(0) == "<pre>")
     {
-      for (unsigned int i = 1; i < v_data.size(); ++i)
+      getline(ifs_apparatus, line_apparatus, '\n');
+      v_data.clear();
+      splitLine(line_apparatus, v_data, ',');
+      if (v_data.at(0) == "Apparatus Name" && v_data.at(1) == meta_apparatus)
       {
-        string content = v_data.at(i);
-        if (content.size() == 3) v_heaterChannel.push_back(v_data.at(i));
-      }
-    }
-    else if (v_data.at(0) == "Cooler Channels")
-    {
-      for (unsigned int i = 1; i < v_data.size(); ++i)
-      {
-        string content = v_data.at(i);
-        if (content.size() == 3) v_coolerChannel.push_back(v_data.at(i));
+        while (v_data.at(0) != "</pre>")
+        {
+          getline(ifs_apparatus, line_apparatus, '\n');
+          v_data.clear();
+          splitLine(line_apparatus, v_data, ',');
+          if (v_data.at(0) == "Heater Channels")
+          {
+            for (unsigned int i = 1; i < v_data.size(); ++i)
+            {
+              string content = v_data.at(i);
+              if (content.size() == 3) v_heaterChannel.push_back(v_data.at(i));
+            }
+          }
+          else if (v_data.at(0) == "Cooler Channels")
+          {
+            for (unsigned int i = 1; i < v_data.size(); ++i)
+            {
+              string content = v_data.at(i);
+              if (content.size() == 3) v_coolerChannel.push_back(v_data.at(i));
+            }
+          }
+        }
       }
     }
   }
