@@ -443,6 +443,7 @@ int main(int argc, char **argv)
   ofs_datacard<<"Through-plane thermal conductivity measurement"<<endl;
   ofs_datacard<<"Experimentalist, "<<meta_experimentalist<<endl;
   ofs_datacard<<"Date of measurement, "<<meta_date<<endl;
+  ofs_datacard<<"Apparatus, "<<meta_apparatus<<endl;
   ofs_datacard<<"Material, "<<meta_material<<endl;
   ofs_datacard<<"Sample, "<<meta_sample<<endl;
   ofs_datacard<<"Thickness (um), "<<meta_thickness<<", "<<meta_thicknessErr<<endl;

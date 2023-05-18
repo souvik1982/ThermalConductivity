@@ -41,6 +41,7 @@ int main()
   }
   string meta_experimentalist,
          meta_date,
+         meta_apparatus,
          meta_material,
          meta_sample;
   vector<double> v_heaterRegionAvg, v_coolerRegionAvg,
@@ -56,6 +57,7 @@ int main()
     splitLine(line, v_data, ',');
     if (v_data.at(0) == "Experimentalist")     meta_experimentalist = v_data.at(1);
     if (v_data.at(0) == "Date of measurement") meta_date = v_data.at(1);
+    if (v_data.at(0) == "Apparatus")           meta_apparatus = v_data.at(1);
     if (v_data.at(0) == "Material")            meta_material = v_data.at(1);
     if (v_data.at(0) == "Sample")              meta_sample = v_data.at(1);
     if (v_data.at(0) == "Hot Fluxmeter Temperatures (C)")
@@ -88,26 +90,46 @@ int main()
   ifs_datacard.close();
 
   // Read machine information from Apparatus.html
-  ifstream ifs_apparatus("Apparatus.html");
-  if (!ifs_apparatus.good())
+  string env_thermalBase = string(getenv("THERMALBASE"));
+  if (env_thermalBase == "")
   {
-    cout<<"ERROR: Apparatus.html containing apparatus-specific information not found. Please softlink to it from the current directory. Aborting."<<endl;
+    cout<<"ERROR: Environmental variable THERMALBASE not set. Aborting."<<endl;
     return 0;
   }
-  string apparatus_name;
+  ifstream ifs_apparatus((env_thermalBase+"/Apparatus.html").c_str());
+  if (!ifs_apparatus.good())
+  {
+    cout<<"ERROR: "<<env_thermalBase<<"/"<<"Apparatus.html containing apparatus-specific information not found. Aborting."<<endl;
+    return 0;
+  }
   double apparatus_thermistorDistance,
          apparatus_thermistorBoreDiameter,
          apparatus_fluxmeterDiameter,
          apparatus_fluxmeterConductivity;
-  while (getline(ifs_apparatus, line, '\n'))
+  string line_apparatus;
+  while (getline(ifs_apparatus, line_apparatus, '\n'))
   {
     vector<string> v_data;
-    splitLine(line, v_data, ',');
-    if (v_data.at(0) == "Apparatus Name")                 apparatus_name = v_data.at(1);
-    if (v_data.at(0) == "Inter-thermistor distance (mm)") apparatus_thermistorDistance = stod(v_data.at(1));
-    if (v_data.at(0) == "Thermistor bore diameter (mm)")  apparatus_thermistorBoreDiameter = stod(v_data.at(1));
-    if (v_data.at(0) == "Fluxmeter diameter (mm)")        apparatus_fluxmeterDiameter = stod(v_data.at(1));
-    if (v_data.at(0) == "Fluxmeter conductivity (W/mK)")  apparatus_fluxmeterConductivity = stod(v_data.at(1));
+    splitLine(line_apparatus, v_data, ',');
+    if (v_data.at(0) == "<pre>")
+    {
+      getline(ifs_apparatus, line_apparatus, '\n');
+      v_data.clear();
+      splitLine(line_apparatus, v_data, ',');
+      if (v_data.at(0) == "Apparatus Name" && v_data.at(1) == meta_apparatus)
+      {
+        while (v_data.at(0) != "</pre>")
+        {
+          getline(ifs_apparatus, line_apparatus, '\n');
+          v_data.clear();
+          splitLine(line_apparatus, v_data, ',');
+          if (v_data.at(0) == "Inter-thermistor distance (mm)") apparatus_thermistorDistance = stod(v_data.at(1));
+          if (v_data.at(0) == "Thermistor bore diameter (mm)")  apparatus_thermistorBoreDiameter = stod(v_data.at(1));
+          if (v_data.at(0) == "Fluxmeter diameter (mm)")        apparatus_fluxmeterDiameter = stod(v_data.at(1));
+          if (v_data.at(0) == "Fluxmeter conductivity (W/mK)")  apparatus_fluxmeterConductivity = stod(v_data.at(1));
+        }
+      }
+    }
   }
   ifs_apparatus.close();
 
@@ -152,9 +174,9 @@ int main()
   cout<<"Analysis data: "<<meta_analysisDate<<endl;
   cout<<"Experimentalist: "<<meta_experimentalist<<endl;
   cout<<"Measurement Date: "<<meta_date<<endl;
+  cout<<"Apparatus: "<<meta_apparatus<<endl;
   cout<<"Material: "<<meta_material<<endl;
   cout<<"Sample: "<<meta_sample<<endl;
-  cout<<"Apparatus: "<<apparatus_name<<endl;
 
   // Calculate positions of thermistors in hot and cold fluxmeters
   // Add bias corrections to thermistor measurements
@@ -312,7 +334,6 @@ int main()
   ofs_results<<"<pre>"<<endl;
   ofs_results<<"Analyst, "<<meta_analyst<<endl;
   ofs_results<<"Analysis date, "<<meta_analysisDate<<endl;
-  ofs_results<<"Apparatus, "<<apparatus_name<<endl;
   ofs_results<<"Apparatus inter-thermistor distance (mm), "<<apparatus_thermistorDistance<<endl;
   ofs_results<<"Apparatus thermistor bore diameter (mm), "<<apparatus_thermistorBoreDiameter<<endl;
   ofs_results<<"Apparatus fluxmeter diameter (mm), "<<apparatus_fluxmeterDiameter<<endl;
