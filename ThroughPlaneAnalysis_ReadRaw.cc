@@ -77,6 +77,7 @@ int main(int argc, char **argv)
   cout<<"=== Meta-data ============================="<<endl;
   cout<<"Experimentalist: "<<meta_experimentalist<<endl;
   cout<<"Date: "<<meta_date<<endl;
+  cout<<"Apparatus: "<<meta_apparatus<<endl;
   cout<<"Material: "<<meta_material<<endl;
   cout<<"Sample: "<<meta_sample<<endl;
   cout<<"Heater Voltage: "<<meta_heaterVoltage<<" V"<<endl;
