@@ -175,6 +175,7 @@ int main()
   double k_err_minuit = k_minuit * slope_err_minuit / slope_minuit;
 
   c_metaSlope_minuit->SaveAs(("c_metaSlope_minuit_"+meta_material+".png").c_str());
+  c_metaSlope_minuit->SaveAs(("c_metaSlope_minuit_"+meta_material+".pdf").c_str());
   ofs_result<<"<img src='c_metaSlope_minuit_"<<meta_material<<".png'/> <br/>"<<endl;
   ofs_result<<"Iterative Minuit fit with "<<correlation<<" correlation between data point uncertainties. k = "<<k_minuit<<" +/- "<<k_err_minuit<<" W/mK"<<endl;
 
