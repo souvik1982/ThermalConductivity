@@ -104,8 +104,8 @@ int main()
 
   double k = 1./(slope*sample_area*1e6);
   double k_err = k * slope_err/slope;
-  double Rint = intercept;
-  double Rint_err = intercept_err;
+  double Rint = intercept*1e5;
+  double Rint_err = intercept_err*1e5;
 
   ofstream ofs_result("Result.html");
   ofs_result<<"<pre>"<<endl;
@@ -114,7 +114,7 @@ int main()
   ofs_result<<"Analysis date: "<<meta_analysisDate<<endl;
   ofs_result<<"Material: "<<meta_material<<endl;
   ofs_result<<"k = "<<k<<" +/- "<<k_err<<" W/mK"<<endl;
-  ofs_result<<"Rint = "<<Rint<<" +/- "<<Rint_err<<" Km^2/W"<<endl;
+  ofs_result<<"Rint = "<<Rint<<" +/- "<<Rint_err<<" x 10^-5 Km^2/W"<<endl;
   ofs_result<<"Reduced chi^2 = "<<redchi2<<endl;
   ofs_result<<"</pre>"<<endl;
   ofs_result<<"Underlying sample results: <br/>"<<endl;
