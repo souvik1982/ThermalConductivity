@@ -15,6 +15,7 @@ vector<double> global_v_x, global_v_xErr, global_v_y, global_v_yErr;
 Double_t* global_array_Cij_inv;
 Double_t fitFunction(double x, Double_t *par);
 void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag);
+double redChi2(Double_t *par);
 
 double quad(double a=0, double b=0, double c=0, double d=0, double e=0, double f=0, double g=0, double h=0, double i=0, double j=0, double k=0);
 
@@ -22,7 +23,7 @@ class CorrelatedDataFitter
 {
 public:
   CorrelatedDataFitter(double correlation, vector<double> v_x, vector<double> v_y, vector<double> v_xErr, vector<double> v_yErr);
-  TCanvas* getMinuitFit(string title, double &m, double &dm, double &c, double &dc);
+  TCanvas* getMinuitFit(string title, double &m, double &dm, double &c, double &dc, double &reducedChi2);
   TGraphErrors* getAnalyticalFit(double &m, double &dm, double &c, double &dc);
 };
 
@@ -100,7 +101,7 @@ TGraphErrors* CorrelatedDataFitter::getAnalyticalFit(double &m, double &dm, doub
   return g;
 }
 
-TCanvas* CorrelatedDataFitter::getMinuitFit(string title, double &slope, double &slopeErr, double &intercept, double &interceptErr)
+TCanvas* CorrelatedDataFitter::getMinuitFit(string title, double &slope, double &slopeErr, double &intercept, double &interceptErr, double &reducedChi2)
 {
   TMinuit *gMinuit = new TMinuit(2);
   gMinuit->SetFCN(fcn);
@@ -164,6 +165,12 @@ TCanvas* CorrelatedDataFitter::getMinuitFit(string title, double &slope, double 
   g->Draw("AP");
   h_band->Draw("E3 SAME");
 
+  // Return reduced chi^2
+  Double_t fitParameters[2];
+  fitParameters[0] = intercept;
+  fitParameters[1] = slope;
+  reducedChi2 = redChi2(fitParameters);
+
   return c;
 }
 
@@ -180,10 +187,23 @@ void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
   {
     for (unsigned int j=0; j<global_n; ++j)
     {
-      chi2 += (global_v_y.at(i) - fitFunction(global_v_x.at(i), par))*(global_v_y.at(j) - fitFunction(global_v_x.at(j), par))*global_array_Cij_inv[i*global_n+j];
+      chi2 += 0.5*(global_v_y.at(i) - fitFunction(global_v_x.at(i), par))*(global_v_y.at(j) - fitFunction(global_v_x.at(j), par))*global_array_Cij_inv[i*global_n+j];
     }
   }
   f = chi2;
+}
+
+double redChi2(Double_t *par)
+{
+  double chi2 = 0;
+  for (unsigned int i=0; i<global_n; ++i)
+  {
+    for (unsigned int j=0; j<global_n; ++j)
+    {
+      chi2 += 0.5*(global_v_y.at(i) - fitFunction(global_v_x.at(i), par))*(global_v_y.at(j) - fitFunction(global_v_x.at(j), par))*global_array_Cij_inv[i*global_n+j];
+    }
+  }
+  return chi2/(global_n-2);
 }
 
 double quad(double a, double b, double c, double d, double e, double f, double g, double h, double i, double j, double k){

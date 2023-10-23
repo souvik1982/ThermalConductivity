@@ -143,11 +143,15 @@ int main()
   double slope_err = f_linear->GetParError(1);
   double intercept = f_linear->GetParameter(0);
   double intercept_err = f_linear->GetParError(0);
+  double reducedChi2 = g_metaslope->Chisquare(f_linear)/(v_length.size()-2);
 
   double k = 1./(slope*1e3);
   double k_err = k * slope_err/slope;
   ofs_result<<"<img src='c_metaSlope_"<<meta_material<<".png'/> <br/>"<<endl;
-  ofs_result<<"Iterative fit with no correlations between data points. k = "<<k<<" +/- "<<k_err<<" W/mK"<<endl;
+  ofs_result<<"Iterative fit with no correlations between data points: <br/>"<<endl;
+  ofs_result<<"k = "<<k<<" +/- "<<k_err<<" W/mK <br/>"<<endl;
+  ofs_result<<"R = "<<intercept<<" +/- "<<intercept_err<<" Km^2/W <br/>"<<endl;
+  ofs_result<<"X^2/(ndof - 2) = "<<reducedChi2<<" <br/>"<<endl;
   ofs_result<<"<hr/>"<<endl;
 
   // Analytical fit with correlation
@@ -164,12 +168,14 @@ int main()
   g_metaslope_analytical->Draw("AP");
   c_metaslope_analytical->SaveAs(("c_metaSlope_analytical_"+meta_material+".png").c_str());
   ofs_result<<"<img src='c_metaSlope_analytical_"<<meta_material<<".png'/> <br/>"<<endl;
-  ofs_result<<"Analytical fit with "<<correlation<<" correlation between data point uncertainties. k = "<<k_analytical<<" +/- "<<k_err_analytical<<" W/mK"<<endl;
+  ofs_result<<"Analytical fit with "<<correlation<<" correlation between data point uncertainties: <br/>"<<endl;
+  ofs_result<<"k = "<<k_analytical<<" +/- "<<k_err_analytical<<" W/mK <br/>"<<endl;
+  ofs_result<<"R = "<<intercept_analytical<<" +/- "<<intercept_err_analytical<<" Km^2/W <br/>"<<endl;
   ofs_result<<"<hr/>"<<endl;
 
   // Minuit Fit with correlation
-  double slope_minuit, slope_err_minuit, intercept_minuit, intercept_err_minuit;
-  TCanvas *c_metaSlope_minuit = correlatedDataFitter.getMinuitFit("; Sample length (mm); Thermal insulance (Km^{2}/W)", slope_minuit, slope_err_minuit, intercept_minuit, intercept_err_minuit);
+  double slope_minuit, slope_err_minuit, intercept_minuit, intercept_err_minuit, reducedChi2_minuit;
+  TCanvas *c_metaSlope_minuit = correlatedDataFitter.getMinuitFit("; Sample length (mm); Thermal insulance (Km^{2}/W)", slope_minuit, slope_err_minuit, intercept_minuit, intercept_err_minuit, reducedChi2_minuit);
 
   double k_minuit = 1./(slope_minuit*1e3);
   double k_err_minuit = k_minuit * slope_err_minuit / slope_minuit;
@@ -177,8 +183,10 @@ int main()
   c_metaSlope_minuit->SaveAs(("c_metaSlope_minuit_"+meta_material+".png").c_str());
   c_metaSlope_minuit->SaveAs(("c_metaSlope_minuit_"+meta_material+".pdf").c_str());
   ofs_result<<"<img src='c_metaSlope_minuit_"<<meta_material<<".png'/> <br/>"<<endl;
-  ofs_result<<"Iterative Minuit fit with "<<correlation<<" correlation between data point uncertainties. k = "<<k_minuit<<" +/- "<<k_err_minuit<<" W/mK"<<endl;
-
+  ofs_result<<"Iterative Minuit fit with "<<correlation<<" correlation between data point uncertainties. <br/>"<<endl;
+  ofs_result<<" k = "<<k_minuit<<" +/- "<<k_err_minuit<<" W/mK <br/>"<<endl;
+  ofs_result<<" Rint = "<<intercept_minuit<<" +/- "<<intercept_err_minuit<<" Km^2/W <br/>"<<endl;
+  ofs_result<<" X^2/(ndof - 2) = "<<reducedChi2_minuit<<" <br/>"<<endl;
   ofs_result.close();
   cout<<"Result in Result.html"<<endl;
   system("open Result.html");
