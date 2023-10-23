@@ -197,7 +197,7 @@ int main()
     v_coolerRegionAvg.at(i) += v_coolerBias.at(i);
     v_coolerRegionDiffAvg.at(i) += (v_coolerBias.at(i) - v_coolerBias.at(0));
   }
-  double x_sampleHotEnd = n_heaterThermistors * apparatus_thermistorDistance; // wrt hottest thermistor of hot fluxmeter
+  double x_sampleHotEnd = 6 * apparatus_thermistorDistance;                   // wrt hottest thermistor of hot fluxmeter
   double x_sampleColdEnd = -apparatus_thermistorDistance;                     // wrt hottest thermistor of cold fluxmeter
 
   double slope, intercept; // Used for rough estimate of slope and intercept to help fits
@@ -211,8 +211,6 @@ int main()
   TF1 *f_linear_heater = new TF1("f_linear_heater", "[0]+[1]*x", -2., 40.);
   if (roughEstimateSlopeIntercept(v_heaterPosition, v_heaterRegionAvg, slope, intercept))
   {
-    cout<<"intercept = "<<intercept<<", slope = "<<slope<<endl;
-
     f_linear_heater->SetParLimits(0, 0., 2.0*intercept);
     f_linear_heater->SetParLimits(1, 2.*slope, 0.01*slope);
   }
@@ -237,8 +235,9 @@ int main()
   TF1 *f_linear_cooler = new TF1("f_linear_cooler", "[0]+[1]*x", -2., 40.);
   if (roughEstimateSlopeIntercept(v_coolerPosition, v_coolerRegionAvg, slope, intercept))
   {
-    f_linear_cooler->SetParLimits(0, 0.1*intercept, 2.0*intercept);
-    f_linear_cooler->SetParLimits(1, -1., 0.);
+    if (intercept>0) f_linear_cooler->SetParLimits(0, 0.1*intercept, 2.0*intercept);
+      else f_linear_cooler->SetParLimits(0, 2.0*intercept, 0.1*intercept);
+    f_linear_cooler->SetParLimits(1, 1.2*slope, 0.8*slope);
   }
   else
   {
@@ -261,7 +260,8 @@ int main()
   TF1 *f_linear_heater_diff = new TF1("f_linear_heater_diff", "[0]+[1]*x", -2., 40.);
   if (roughEstimateSlopeIntercept(v_heaterPosition, v_heaterRegionDiffAvg, slope, intercept))
   {
-    f_linear_heater_diff->SetParLimits(0, 0.1*intercept, 2.0*intercept);
+    if (intercept>0) f_linear_heater_diff->SetParLimits(0, 0.1*intercept, 2.0*intercept);
+      else f_linear_heater_diff->SetParLimits(0, 2.0*intercept, 0.1*intercept);
     f_linear_heater_diff->SetParLimits(1, -1., 0.);
   }
   else
@@ -276,7 +276,7 @@ int main()
   c_HeaterDiffFlux->SaveAs("c_HeaterDiffFlux.png");
   c_HeaterDiffFlux->SaveAs("c_HeaterDiffFlux.pdf");
 
-  // Fit the basic Cooler Region Diff plot
+  // Fit the Cooler Region Diff plot
   TGraphErrors *g_CoolerDiffFlux = new TGraphErrors(n_coolerThermistors, &v_coolerPosition[0], &v_coolerRegionDiffAvg[0], &v_coolerPositionErr[0], &v_coolerRegionDiffErr[0]);
   g_CoolerDiffFlux->SetTitle("; Thermistor Position (mm); Average Relative Temperature (^{#circ}C)");
   g_CoolerDiffFlux->GetXaxis()->SetLimits(-5., 45.);
@@ -285,7 +285,8 @@ int main()
   TF1 *f_linear_cooler_diff = new TF1("f_linear_cooler_diff", "[0]+[1]*x", -2., 40.);
   if (roughEstimateSlopeIntercept(v_coolerPosition, v_coolerRegionDiffAvg, slope, intercept))
   {
-    f_linear_cooler_diff->SetParLimits(0, 0.1*intercept, 2.0*intercept);
+    if (intercept>0) f_linear_cooler_diff->SetParLimits(0, 0.1*intercept, 2.0*intercept);
+      else f_linear_cooler_diff->SetParLimits(0, 2.0*intercept, 0.1*intercept);
     f_linear_cooler_diff->SetParLimits(1, -1., 0.);
   }
   else
