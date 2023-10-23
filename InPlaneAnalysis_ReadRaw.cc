@@ -458,8 +458,8 @@ int main(int argc, char **argv)
   ofs_datacard<<"Length (mm), "<<meta_length<<", "<<meta_lengthErr<<endl;
   ofs_datacard<<"Width (mm), "<<meta_width<<", "<<meta_widthErr<<endl;
   ofs_datacard<<"Thickness (mm), "<<meta_thickness<<", "<<meta_thicknessErr<<endl;
-  ofs_datacard<<"Heater Voltage, "<<meta_heaterVoltage<<endl;
-  ofs_datacard<<"Cooler Voltage, "<<meta_coolerVoltage<<endl;
+  ofs_datacard<<"Heater Voltage (V), "<<meta_heaterVoltage<<endl;
+  ofs_datacard<<"Cooler Voltage (V), "<<meta_coolerVoltage<<endl;
   ofs_datacard<<"Hot Fluxmeter Channels, "<<v_heaterChannel.at(0);
   for (unsigned int i = 1; i < n_heaterThermistors; ++i)
     ofs_datacard<<", "<<v_heaterChannel.at(i);
