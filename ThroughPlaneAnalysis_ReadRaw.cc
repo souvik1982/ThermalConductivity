@@ -100,7 +100,6 @@ int main(int argc, char **argv)
   vector<string> v_heaterChannel, v_coolerChannel;
   string line_apparatus;
   while (getline(ifs_apparatus, line_apparatus, '\n'))
-  while (getline(ifs_apparatus, line_apparatus, '\n'))
   {
     vector<string> v_data;
     splitLine(line_apparatus, v_data, ',');
